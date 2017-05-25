@@ -11,5 +11,5 @@
 @interface CDFindMethodVisitor : CDVisitor
 
 @property (strong) NSString *searchString;
-
+@property (strong) NSString *searchClassString;
 @end

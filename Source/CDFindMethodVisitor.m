@@ -26,6 +26,7 @@
 @implementation CDFindMethodVisitor
 {
     NSString *_searchString;
+    NSString *_searchClassString;
     NSMutableString *_resultString;
     CDOCProtocol *_context;
     BOOL _hasShownContext;
@@ -35,6 +36,7 @@
 {
     if ((self = [super init])) {
         _searchString = nil;
+        _searchClassString = nil;
         _resultString = [[NSMutableString alloc] init];
         _context = nil;
         _hasShownContext = NO;
@@ -119,7 +121,7 @@
 - (void)visitClassMethod:(CDOCMethod *)method;
 {
     NSRange range = [method.name rangeOfString:self.searchString];
-    if (range.length > 0) {
+    if (range.length > 0 || [@"*" isEqualToString:self.searchString]) {
         [self showContextIfNecessary];
 
         [self.resultString appendString:@"+ "];
@@ -131,7 +133,7 @@
 - (void)visitInstanceMethod:(CDOCMethod *)method propertyState:(CDVisitorPropertyState *)propertyState;
 {
     NSRange range = [method.name rangeOfString:self.searchString];
-    if (range.length > 0) {
+    if (range.length > 0 || [@"*" isEqualToString:self.searchString]) {
         [self showContextIfNecessary];
 
         [self.resultString appendString:@"- "];

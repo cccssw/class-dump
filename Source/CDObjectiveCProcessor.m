@@ -17,7 +17,7 @@
 #import "CDOCCategory.h"
 #import "CDSection.h"
 #import "CDProtocolUniquer.h"
-
+#import "CDFindMethodVisitor.h"
 // Note: sizeof(long long) == 8 on both 32-bit and 64-bit.  sizeof(uint64_t) == 8.  So use [NSNumber numberWithUnsignedLongLong:].
 
 @implementation CDObjectiveCProcessor
@@ -186,16 +186,54 @@
     // TODO: Sort protocols by dependency
     // TODO: (2004-01-30) It looks like protocols might be defined in more than one file.  i.e. NSObject.
     // TODO: (2004-02-02) Looks like we need to record the order the protocols were encountered, or just always sort protocols
-    for (CDOCProtocol *protocol in [self.protocolUniquer uniqueProtocolsSortedByName])
-        [protocol recursivelyVisit:visitor];
-
+    NSString *classSearch = nil;
+    if ([visitor isKindOfClass:[CDFindMethodVisitor class]]) {
+        classSearch = ((CDFindMethodVisitor*)visitor).searchClassString;
+        if (((CDFindMethodVisitor*)visitor).searchString==nil){
+            ((CDFindMethodVisitor*)visitor).searchString = @"*";
+        }
+    }
+    
+    for (CDOCProtocol *protocol in [self.protocolUniquer uniqueProtocolsSortedByName]){
+        BOOL search = true;
+        if (classSearch!=nil && classSearch.length>0){
+            NSString * clazzName = protocol.name;
+            NSRange range = [clazzName rangeOfString:classSearch];
+            if (range.length <= 0) {
+                search = NO;
+            }
+        }
+        
+        if (search){
+            [protocol recursivelyVisit:visitor];
+        }
+    }
+    
     if ([[visitor classDump] shouldSortClassesByInheritance]) {
         [classesAndCategories sortTopologically];
     } else if ([[visitor classDump] shouldSortClasses])
         [classesAndCategories sortUsingSelector:@selector(ascendingCompareByName:)];
 
-    for (id aClassOrCategory in classesAndCategories)
-        [aClassOrCategory recursivelyVisit:visitor];
+    for (id aClassOrCategory in classesAndCategories){
+        BOOL search = true;
+        if (classSearch!=nil && classSearch.length>0){
+            NSString * clazzName = nil;
+            if ([aClassOrCategory isKindOfClass:[CDOCClass class]]){
+                clazzName = ((CDOCClass*)aClassOrCategory).name;
+            }else if ([aClassOrCategory isKindOfClass:[CDOCCategory class]]){
+                clazzName = ((CDOCCategory*)aClassOrCategory).name;
+            }
+            NSRange range = [clazzName rangeOfString:classSearch];
+            if (range.length <= 0) {
+                search = NO;
+            }
+        }
+        
+        if (search){
+            [aClassOrCategory recursivelyVisit:visitor];
+        }
+    }
+    
 
     [visitor didVisitObjectiveCProcessor:self];
 }
