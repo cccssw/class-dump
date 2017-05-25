@@ -81,3 +81,8 @@ Contact
 
 You may contact the author by:
    e-mail:  nygard at gmail.com
+   
+added function:
+-----
+![alt hopper](https://raw.githubusercontent.com/cccssw/class-dump/master/imgs/class-dump-with-class-search-hopper.png "hopper usage")
+   
